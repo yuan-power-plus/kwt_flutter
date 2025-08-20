@@ -8,7 +8,7 @@ class ScheduleTimePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('作息时间'),
+        title: const Text('作息时间', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
       ),
       body: InteractiveViewer(
         minScale: 0.8,
