@@ -9,7 +9,7 @@ class AppConfig {
   
   // 应用配置
   static const String appName = '科文通';
-  static const String appVersion = '3.3.0';
+  static const String appVersion = '3.3.1';
   // GitHub Releases 信息（用于检查更新）
   static const String githubOwner = 'yuan-power-plus';
   static const String githubRepo = 'kwt_flutter';
