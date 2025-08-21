@@ -501,15 +501,21 @@ class _EntryTile extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 4),
-        Text(
-          compactLocation(entry.location),
-          style: textTheme.bodySmall?.copyWith(
-            color: Colors.grey[600],
-            fontSize: 11,
-          ),
-          textAlign: TextAlign.center,
-        ),
+        (entry.courseName.trim() == '大学体育A')
+            ? const SizedBox.shrink()
+            : Column(
+                children: [
+                  const SizedBox(height: 4),
+                  Text(
+                    compactLocation(entry.location),
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
       ],
     );
   }
@@ -538,9 +544,21 @@ void _showDetail(BuildContext context, TimetableEntry e) {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _DetailRow('教师', e.teacher, Icons.person),
-          _DetailRow('地点', e.location, Icons.location_on),
-          if (e.credits.isNotEmpty) _DetailRow('学分', e.credits, Icons.star),
+          Builder(builder: (context) {
+            final bool isPe = e.courseName.contains('大学体育');
+            final String teacherValue = isPe
+                ? (e.location.isNotEmpty ? e.location : e.teacher)
+                : e.teacher;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _DetailRow('教师', teacherValue, Icons.person),
+                if (!isPe) _DetailRow('地点', e.location, Icons.location_on),
+                if (!isPe && e.credits.isNotEmpty) _DetailRow('学分', e.credits, Icons.star),
+              ],
+            );
+          }),
         ],
       ),
       actions: [

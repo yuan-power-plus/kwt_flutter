@@ -123,7 +123,11 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  logged ? (_studentName?.isNotEmpty == true ? _studentName! : '已登录') : '未登录',
+                  logged
+                      ? (_studentName?.isNotEmpty == true
+                          ? _studentName!
+                          : (_studentId?.isNotEmpty == true ? _studentId! : '已登录'))
+                      : '未登录',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),

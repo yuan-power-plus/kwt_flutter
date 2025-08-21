@@ -64,12 +64,11 @@ class KwtClient {
   /// 简单判断返回的 HTML 是否像登录页/未登录提示
   bool _htmlLooksLikeLoginPage(String html) {
     final lc = html.toLowerCase();
-    // 常见登录页/脚本重定向/未登录提示关键词
-    if (lc.contains('/xk/logintoxk') || lc.contains('verifycode') || lc.contains('randomcode')) return true;
-    if (lc.contains('用户登录') || lc.contains('请先登录') || lc.contains('未登录') || lc.contains('重新登录')) return true;
-    if (lc.contains('top.location') || lc.contains('window.top.location')) return lc.contains('login');
-    // 登录表单典型字段
-    if (lc.contains('useraccount') && lc.contains('userpassword')) return true;
+    if (html.contains('请先登录系统')) return true; // 精确中文短语
+    final hasLoginFields = lc.contains('useraccount') && lc.contains('userpassword');
+    final hasCaptcha = lc.contains('/verifycode.servlet') || lc.contains('randomcode');
+    if (hasLoginFields) return true;
+    if (hasCaptcha && lc.contains('login')) return true;
     return false;
   }
 

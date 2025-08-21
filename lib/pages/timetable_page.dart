@@ -474,11 +474,23 @@ class _Cell extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _DetailRow('教师', e.teacher, Icons.person),
-            _DetailRow('地点', e.location, Icons.location_on),
-            if (e.weekText.isNotEmpty || e.sectionIndex > 0 || e.sectionText.isNotEmpty)
-              _DetailRow('节次', _formatSections(e), Icons.schedule),
-            if (e.credits.isNotEmpty) _DetailRow('学分', e.credits, Icons.star),
+            Builder(builder: (context) {
+              final bool isPe = e.courseName.contains('大学体育');
+              final String teacherValue = isPe
+                  ? (e.location.isNotEmpty ? e.location : e.teacher)
+                  : e.teacher;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _DetailRow('教师', teacherValue, Icons.person),
+                  if (!isPe) _DetailRow('地点', e.location, Icons.location_on),
+                  if (!isPe && (e.weekText.isNotEmpty || e.sectionIndex > 0 || e.sectionText.isNotEmpty))
+                    _DetailRow('节次', _formatSections(e), Icons.schedule),
+                  if (!isPe && e.credits.isNotEmpty) _DetailRow('学分', e.credits, Icons.star),
+                ],
+              );
+            }),
           ],
         ),
         actions: [
