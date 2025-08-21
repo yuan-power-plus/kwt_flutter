@@ -73,6 +73,7 @@ flutter:
   assets:
     - lib/assets/images/logo.png
     - lib/assets/images/zxb.jpg
+    - lib/assets/images/xl.jpg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -9,6 +9,9 @@ class SettingsService {
   static const _keyStudentId = 'kwt.studentId';
   static const _keyStudentName = 'kwt.studentName';
   static const _keyNetworkEnvironment = 'kwt.networkEnvironment';
+  static const _keyRememberPassword = 'kwt.rememberPassword';
+  static const _keySavedPassword = 'kwt.savedPassword';
+  static const _keyRememberedStudentId = 'kwt.rememberedStudentId';
 
   Future<void> saveTerm(String term) async {
     final sp = await SharedPreferences.getInstance();
@@ -86,6 +89,42 @@ class SettingsService {
     }
     // 默认为校园网
     return AppConfig.intranetServerUrl;
+  }
+
+  // 记住密码与本地保存的密码
+  Future<void> setRememberPassword(bool remember) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setBool(_keyRememberPassword, remember);
+    if (!remember) {
+      await sp.remove(_keySavedPassword);
+      await sp.remove(_keyRememberedStudentId);
+    }
+  }
+
+  Future<bool> getRememberPassword() async {
+    final sp = await SharedPreferences.getInstance();
+    return sp.getBool(_keyRememberPassword) ?? false;
+  }
+
+  Future<void> savePassword(String password) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setString(_keySavedPassword, password);
+  }
+
+  Future<String?> getSavedPassword() async {
+    final sp = await SharedPreferences.getInstance();
+    return sp.getString(_keySavedPassword);
+  }
+
+  // 记住的学号（与“记住账号与密码”联动）
+  Future<void> saveRememberedStudentId(String studentId) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setString(_keyRememberedStudentId, studentId);
+  }
+
+  Future<String?> getRememberedStudentId() async {
+    final sp = await SharedPreferences.getInstance();
+    return sp.getString(_keyRememberedStudentId);
   }
 }
 

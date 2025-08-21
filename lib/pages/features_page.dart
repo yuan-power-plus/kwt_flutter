@@ -7,6 +7,7 @@ import 'package:kwt_flutter/services/kwt_client.dart';
 import 'package:kwt_flutter/services/settings.dart';
 import 'package:kwt_flutter/pages/login_page.dart';
 import 'package:kwt_flutter/pages/schedule_time_page.dart';
+import 'package:kwt_flutter/pages/academic_calendar_page.dart';
 
 /// 功能入口页
 class FeaturesPage extends StatelessWidget {
@@ -40,7 +41,8 @@ class FeaturesPage extends StatelessWidget {
                     _tileSized(context, '班级课表', Icons.class_, itemWidth, itemHeight, () => _push(context, ClassTimetablePage(client: client))),
                     _tileSized(context, '课程成绩', Icons.grade, itemWidth, itemHeight, () => _push(context, GradesPage(client: client))),
                     _tileSized(context, '等级考试', Icons.assessment, itemWidth, itemHeight, () => _push(context, LevelExamPage(client: client))),
-                    _tileSized(context, '作息时间', Icons.schedule, itemWidth, itemHeight, () => _push(context, const ScheduleTimePage()), requireLogin: false,),
+                    _tileSized(context, '作息时间', Icons.schedule, itemWidth, itemHeight, () => _push(context, const ScheduleTimePage())),
+                    _tileSized(context, '校历', Icons.calendar_month, itemWidth, itemHeight, () => _push(context, const AcademicCalendar())),
                   ],
                 );
               },

@@ -25,21 +25,39 @@ class _LoginPageState extends State<LoginPage> {
   bool _busy = false;
   String? _error;
   String _selectedNetworkEnvironment = 'intranet'; // 默认选择校园网
+  bool _rememberPassword = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedNetworkEnvironment();
+    _loadInitialState();
   }
 
-  /// 加载已保存的网络环境并初始化客户端
-  Future<void> _loadSavedNetworkEnvironment() async {
+  /// 加载已保存的初始状态（网络环境、记住账号与密码）并初始化客户端
+  Future<void> _loadInitialState() async {
     final savedEnvironment = await _settings.getNetworkEnvironment();
     if (savedEnvironment != null) {
       setState(() {
         _selectedNetworkEnvironment = savedEnvironment;
       });
     }
+    // 记住账号与密码（仅在开启“记住”时自动填充）
+    final remember = await _settings.getRememberPassword();
+    String? savedPwd;
+    String? rememberedSid;
+    if (remember) {
+      rememberedSid = await _settings.getRememberedStudentId();
+      savedPwd = await _settings.getSavedPassword();
+    }
+    setState(() {
+      _rememberPassword = remember;
+      if (rememberedSid != null && rememberedSid.isNotEmpty) {
+        _userCtrl.text = rememberedSid;
+      }
+      if (savedPwd != null && savedPwd.isNotEmpty) {
+        _passCtrl.text = savedPwd;
+      }
+    });
     await _initClient();
   }
 
@@ -97,6 +115,12 @@ class _LoginPageState extends State<LoginPage> {
       final sid = _userCtrl.text.trim();
       if (sid.isNotEmpty) {
         await _settings.saveStudentId(sid);
+      }
+      // 保存“记住账号与密码”状态与数据
+      await _settings.setRememberPassword(_rememberPassword);
+      if (_rememberPassword) {
+        await _settings.saveRememberedStudentId(sid);
+        await _settings.savePassword(_passCtrl.text);
       }
       try {
         final info = await _client!.fetchProfileInfo();
@@ -286,7 +310,28 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+
+                    // 记住账号与密码
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _rememberPassword,
+                          onChanged: (v) async {
+                            if (v == null) return;
+                            setState(() => _rememberPassword = v);
+                            if (!v) {
+                              // 关闭时立即清除已记住的数据
+                              await _settings.setRememberPassword(false);
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 4),
+                        const Text('记住账号与密码'),
+                      ],
+                    ),
+
+                    const SizedBox(height: 4),
                     
                     // 验证码输入框和图片
                     Row(
