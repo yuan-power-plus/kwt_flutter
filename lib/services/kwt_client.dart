@@ -13,6 +13,14 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
+/// 登录状态失效异常：当后端返回登录页/未登录提示时抛出
+class AuthExpiredException implements Exception {
+  AuthExpiredException([this.message = '登录已失效']);
+  final String message;
+  @override
+  String toString() => message;
+}
+
 /// 科文通后端客户端
 ///
 /// - 维护 Cookie（支持持久化）与基础网络配置
@@ -53,6 +61,18 @@ class KwtClient {
 
   static const String defaultTimeMode = AppConfig.defaultTimeMode;
 
+  /// 简单判断返回的 HTML 是否像登录页/未登录提示
+  bool _htmlLooksLikeLoginPage(String html) {
+    final lc = html.toLowerCase();
+    // 常见登录页/脚本重定向/未登录提示关键词
+    if (lc.contains('/xk/logintoxk') || lc.contains('verifycode') || lc.contains('randomcode')) return true;
+    if (lc.contains('用户登录') || lc.contains('请先登录') || lc.contains('未登录') || lc.contains('重新登录')) return true;
+    if (lc.contains('top.location') || lc.contains('window.top.location')) return lc.contains('login');
+    // 登录表单典型字段
+    if (lc.contains('useraccount') && lc.contains('userpassword')) return true;
+    return false;
+  }
+
   /// 统一的网络拦截器：
   /// - 记录请求/响应日志（debug 环境）
   /// - 对超时、网络错误进行友好包装
@@ -68,6 +88,30 @@ class KwtClient {
         if (kDebugMode) {
           debugPrint('[DIO][RES] ${response.statusCode} ${response.requestOptions.uri}');
         }
+        // 仅在 HTML 内容时检查是否被重定向到登录页
+        try {
+          final contentType = (response.headers['content-type']?.join(';') ?? '').toLowerCase();
+          final looksHtml = contentType.contains('text/html') || contentType.contains('text/plain');
+          if (looksHtml) {
+            String html = '';
+            final data = response.data;
+            if (data is List<int>) {
+              html = utf8.decode(data, allowMalformed: true);
+            } else if (data is Uint8List) {
+              html = utf8.decode(data, allowMalformed: true);
+            } else if (data is String) {
+              html = data;
+            }
+            if (html.isNotEmpty && _htmlLooksLikeLoginPage(html)) {
+              return handler.reject(DioException(
+                requestOptions: response.requestOptions,
+                error: AuthExpiredException('登录已失效，请重新登录'),
+                type: DioExceptionType.badResponse,
+                response: response,
+              ));
+            }
+          }
+        } catch (_) {}
         handler.next(response);
       },
       onError: (error, handler) {
@@ -342,6 +386,9 @@ class KwtClient {
     );
     final bytes = Uint8List.fromList((response.data as List<int>));
     final html = utf8.decode(bytes, allowMalformed: true);
+    if (_htmlLooksLikeLoginPage(html)) {
+      throw AuthExpiredException('登录已失效，请重新登录');
+    }
     return parsePersonalTimetableStructured(html);
   }
 
@@ -408,6 +455,9 @@ class KwtClient {
     );
     final bytes = Uint8List.fromList((response.data as List<int>));
     final html = utf8.decode(bytes, allowMalformed: true);
+    if (_htmlLooksLikeLoginPage(html)) {
+      throw AuthExpiredException('登录已失效，请重新登录');
+    }
     return _parseGrades(html);
   }
 
@@ -425,6 +475,9 @@ class KwtClient {
     );
     final bytes = Uint8List.fromList((response.data as List<int>));
     final html = utf8.decode(bytes, allowMalformed: true);
+    if (_htmlLooksLikeLoginPage(html)) {
+      throw AuthExpiredException('登录已失效，请重新登录');
+    }
     return parseExamLevel(html);
   }
 

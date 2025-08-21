@@ -81,6 +81,10 @@ class _GradesPageState extends State<GradesPage> {
         _grades = data;
         _filteredGrades = data;
       });
+    } on AuthExpiredException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = '加载失败: $e');
     } finally {

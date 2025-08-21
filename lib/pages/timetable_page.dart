@@ -87,21 +87,16 @@ class _TimetablePageState extends State<TimetablePage> {
         termId: _termCtrl.text.trim(),
       );
       setState(() => _timetable = data);
-      if (data.isEmpty) {
-        // 个人课表无数据：视为登录已失效，清除本地登录态并跳转登录页
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          try {
-            await widget.client.clearCookies();
-          } catch (_) {}
-          await _settings.clearAuth();
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('登录已失效，请重新登录')));
-          await Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-            (route) => false,
-          );
-        });
-      }
+    } on AuthExpiredException catch (e) {
+      // 登录会话失效：清 Cookie、清登录态并跳回登录
+      try { await widget.client.clearCookies(); } catch (_) {}
+      await _settings.clearAuth();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      await Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
     } catch (e) {
       setState(() => _error = '加载失败: $e');
     } finally {

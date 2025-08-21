@@ -41,6 +41,10 @@ class _ClassTimetablePageState extends State<ClassTimetablePage> {
         className: _classCtrl.text.trim(),
       );
       setState(() => _list = data);
+    } on AuthExpiredException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = '加载失败: $e');
     } finally {
