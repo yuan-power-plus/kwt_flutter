@@ -696,9 +696,53 @@ class KwtClient {
 
   List<TimetableEntry> parseClassTimetableStructured(String html) {
     // 班级课表：表格 id="timetable"，每个单元格含多个 div.kbcontent1
+    // 表头第1行：星期一..星期日（每个 colspan=7）
+    // 表头第2行：每个星期下有 7 个节次列（如 0102、030405、0607、0809、101112、13、14）
     final document = html_parser.parse(html);
     final table = document.querySelector('#timetable');
     if (table == null) return [];
+
+    // 解析第二行表头，提取每个星期下的7个节次标签（仅取星期一的 7 个即可，后续按重复使用）
+    final List<String> slotLabels = [];
+    try {
+      final thead = table.querySelector('thead');
+      final headerRows = thead?.querySelectorAll('tr') ?? const [];
+      if (headerRows.length >= 2) {
+        final tdCells = headerRows[1].querySelectorAll('td');
+        if (tdCells.length >= 8) {
+          for (int k = 1; k <= 7 && k < tdCells.length; k++) {
+            slotLabels.add(tdCells[k].text.trim());
+          }
+        }
+      }
+    } catch (_) {}
+
+    String _sectionTextFromLabel(String raw) {
+      final s = raw.replaceAll(RegExp(r"\s+"), '');
+      if (s.isEmpty) return '';
+      // 形如 0102 -> 第01-02节
+      if (RegExp(r'^\d{4} ? ?$').hasMatch(s) || s.length == 4 && RegExp(r'^\d{4} ?$').hasMatch(s)) {}
+      if (RegExp(r'^\d{4} ?$').hasMatch(s)) {}
+      if (RegExp(r'^\d{4} ?$').hasMatch(s)) {}
+      if (RegExp(r'^\d{4}$').hasMatch(s)) {
+        final a = s.substring(0, 2);
+        final b = s.substring(2, 4);
+        return '第${a}-${b}节';
+      }
+      // 形如 030405/101112 -> 第03-05节
+      if (RegExp(r'^\d{6}$').hasMatch(s)) {
+        final a = s.substring(0, 2);
+        final b = s.substring(4, 6);
+        return '第${a}-${b}节';
+      }
+      // 形如 13/14 -> 第13节
+      if (RegExp(r'^\d{1,2}$').hasMatch(s)) {
+        return '第${s.padLeft(2, '0')}节';
+      }
+      // 已经为“第..节/..节”格式时原样返回
+      return s;
+    }
+
     final result = <TimetableEntry>[];
     final allRows = table.querySelectorAll('tr');
     // 跳过前两行表头
@@ -709,10 +753,12 @@ class KwtClient {
         final td = tds[i];
         final blocks = td.querySelectorAll('div.kbcontent1');
         if (blocks.isEmpty) continue;
-        // 列布局：每 7 列为一组（周一至周日），共 5 组（五个大节）
-        final groupIndex = ((i - 1) ~/ 7) + 1; // 1..5 -> 大节组序号
-        final dayOfWeek = ((i - 1) % 7) + 1;   // 1..7 -> 星期
-        final int sectionIndex = groupIndex.clamp(1, 5);
+        // 列布局修正：每 7 列为一组（星期），组内 7 列为节次
+        final int dayOfWeek = ((i - 1) ~/ 7) + 1; // 1..7 -> 星期一..星期日
+        final int slotIndex = ((i - 1) % 7) + 1;  // 1..7 -> 当天第几个节次列
+        final int sectionIndex = slotIndex <= 5 ? slotIndex : 5; // 13/14 合并为第5大节
+        final String slotLabel = (slotLabels.length == 7) ? slotLabels[slotIndex - 1] : '';
+
         for (final div in blocks) {
           // 更稳健地按 <br> 拆分：避免课程名后跟上班级
           final lines = <String>[];
@@ -734,24 +780,22 @@ class KwtClient {
           String location = '';
           String sectionText = '';
           String weekText = '';
-          // 注意：不设置 startPeriod/endPeriod，避免构造器不存在的参数
           if (lines.isNotEmpty) courseName = lines[0];
-          // 周次信息一般含“周”，仅记录为 weekText，避免当作节次
           for (final line in lines) {
             if (line.contains('周')) {
               weekText = line;
               break;
             }
           }
-          // 教师：通常为第3行
-          if (lines.length >= 3) {
+          if (lines.length >= 4 && (lines[1].startsWith('(') || lines[1].startsWith('（'))) {
+            teacher = lines[3].replaceAll(RegExp(r'^教师[:：]?'), '').trim();
+          } else if (lines.length >= 3) {
             teacher = lines[2].replaceAll(RegExp(r'^教师[:：]?'), '').trim();
           }
-          // 地点：最后一行多为地点
           if (lines.isNotEmpty) {
             location = lines.last;
           }
-          // 从信息行中提取节次（如“01~02节”），若没有则按列组映射
+          // 从信息行中提取节次（如“01~02节”），若没有则按列的节次标签推断
           for (final line in lines) {
             final m = RegExp(r'(\d{1,2})\s*[-~至]\s*(\d{1,2})\s*节').firstMatch(line);
             if (m != null) {
@@ -760,25 +804,7 @@ class KwtClient {
             }
           }
           if (sectionText.isEmpty) {
-            switch (sectionIndex) {
-              case 1:
-                sectionText = '01~02节';
-                break;
-              case 2:
-                sectionText = '03~04节';
-                break;
-              case 3:
-                sectionText = '06~07节';
-                break;
-              case 4:
-                sectionText = '08~09节';
-                break;
-              case 5:
-                sectionText = '10~11节';
-                break;
-              default:
-                break;
-            }
+            sectionText = _sectionTextFromLabel(slotLabel);
           }
           result.add(TimetableEntry(
             courseName: courseName,

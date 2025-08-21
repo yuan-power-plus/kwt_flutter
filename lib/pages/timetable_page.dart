@@ -475,7 +475,7 @@ class _Cell extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Builder(builder: (context) {
-              final bool isPe = e.courseName.contains('大学体育');
+              final bool isPe = e.courseName.contains('大学体育') || e.courseName.contains('大学物理实验');
               final String teacherValue = isPe
                   ? (e.location.isNotEmpty ? e.location : e.teacher)
                   : e.teacher;
