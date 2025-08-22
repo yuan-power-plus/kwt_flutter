@@ -32,7 +32,7 @@
 1) 克隆并安装依赖
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yuan-power-plus/kwt_flutter
 cd kwt_flutter
 flutter pub get
 ```
@@ -41,20 +41,6 @@ flutter pub get
 
 ```bash
 flutter run
-```
-
-3) 可选配置：服务器地址与应用参数（`lib/services/config.dart`）
-
-```dart
-class AppConfig {
-  // 校园网与外网入口（根据实际环境修改）
-  static const String intranetServerUrl = 'http://10.110.225.76/jsxsd';
-  static const String internetServerUrl = 'http://222.187.129.200:51234/jsxsd';
-
-  // 应用与网络
-  static const Duration connectionTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
-}
 ```
 
 应用默认会在「课表」页面启动，你可以在「我的/功能」页登录后使用更多查询能力。
@@ -88,19 +74,15 @@ run {
 1) 生成签名证书（keystore）
 
 ```bash
-# 在项目根目录或任意目录执行，建议保存到 android/app/ 目录下
-keytool -genkeypair \
-  -v -keystore android/app/kwt.jks \
-  -alias kwt \
-  -keyalg RSA -keysize 2048 -validity 36500 \
-  -storetype JKS
+# 在项目根目录或任意目录执行，建议保存到 android/ 目录下
+keytool -genkeypair -v -keystore kwt.jks -alias kwt -keyalg RSA -keysize 2048 -validity 36500 -storetype JKS
 ```
 
-2) 创建 `key.properties`（放在项目根目录）
+2) 创建 `key.properties`（android目录下）
 
 ```properties
 # key.properties（位于项目根目录）
-storeFile=android/app/kwt.jks
+storeFile=kwt.jks
 storePassword=你的Keystore密码
 keyAlias=kwt
 keyPassword=你的Key密码
@@ -176,13 +158,6 @@ lib/
 ```bash
 flutter pub run flutter_launcher_icons:main
 ```
-
-## ❓ 常见问题（FAQ）
-
-- **网络连接失败**：检查网络、服务器地址、防火墙，必要时切换内/外网地址
-- **登录失败**：核对学号密码/验证码，确认教务系统可用
-- **构建失败**：检查 Flutter 版本与依赖，必要时执行 `flutter clean && flutter pub get`
-- **签名问题（Android）**：确认 `key.properties` 位于项目根目录且 `storeFile` 路径正确
 
 ## 📜 许可证与声明
 
