@@ -21,6 +21,38 @@ class TimetableEntry {
   final int sectionIndex; // 第几大节（1-5），0 表示未知
 }
 
+// 合并的课表条目模型（用于连续课程合并显示）
+class MergedTimetableEntry {
+  MergedTimetableEntry({
+    required this.courseName,
+    required this.teacher,
+    required this.credits,
+    required this.location,
+    required this.sectionText,
+    required this.weekText,
+    required this.dayOfWeek,
+    required this.startSection,
+    required this.endSection,
+    required this.rowSpan,
+    required this.originalEntries,
+  });
+
+  final String courseName;
+  final String teacher;
+  final String credits;
+  final String location;
+  final String sectionText;
+  final String weekText;
+  final int dayOfWeek;
+  final int startSection; // 开始小节号
+  final int endSection; // 结束小节号
+  final int rowSpan; // 跨越的行数
+  final List<TimetableEntry> originalEntries; // 原始条目列表
+
+  // 计算课程颜色（基于课程名哈希）
+  int get colorHash => courseName.hashCode;
+}
+
 // 成绩条目模型
 class GradeEntry {
   GradeEntry({

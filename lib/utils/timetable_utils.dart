@@ -1,5 +1,120 @@
 import 'package:kwt_flutter/models/models.dart';
 
+// 提取开始小节号
+int extractStartSection(TimetableEntry entry) {
+  // 优先从sectionText中提取
+  if (entry.sectionText.isNotEmpty) {
+    final match = RegExp(r'(\d{1,2})').firstMatch(entry.sectionText);
+    if (match != null) {
+      return int.tryParse(match.group(1)!) ?? 0;
+    }
+  }
+  
+  // 从大节推断小节范围
+  switch (entry.sectionIndex) {
+    case 1: return 1;
+    case 2: return 3;
+    case 3: return 6;
+    case 4: return 8;
+    case 5: return 10;
+    default: return 0;
+  }
+}
+
+// 提取结束小节号
+int extractEndSection(TimetableEntry entry) {
+  // 优先从sectionText中提取
+  if (entry.sectionText.isNotEmpty) {
+    final match = RegExp(r'(\d{1,2})[-~至](\d{1,2})').firstMatch(entry.sectionText);
+    if (match != null) {
+      return int.tryParse(match.group(2)!) ?? 0;
+    }
+    // 单节次情况
+    final singleMatch = RegExp(r'^(\d{1,2})节?$').firstMatch(entry.sectionText);
+    if (singleMatch != null) {
+      return int.tryParse(singleMatch.group(1)!) ?? 0;
+    }
+  }
+  
+  // 从大节推断小节范围
+  switch (entry.sectionIndex) {
+    case 1: return 2;
+    case 2: return 4;
+    case 3: return 7;
+    case 4: return 9;
+    case 5: return 11;
+    default: return 0;
+  }
+}
+
+// 合并连续的相同课程
+List<MergedTimetableEntry> mergeContinuousCourses(List<TimetableEntry> entries) {
+  if (entries.isEmpty) return [];
+  
+  // 按天和课程名分组
+  final Map<int, Map<String, List<TimetableEntry>>> dayCoursesMap = {};
+  
+  for (final entry in entries) {
+    dayCoursesMap.putIfAbsent(entry.dayOfWeek, () => {});
+    dayCoursesMap[entry.dayOfWeek]!.putIfAbsent(entry.courseName, () => []);
+    dayCoursesMap[entry.dayOfWeek]![entry.courseName]!.add(entry);
+  }
+  
+  final List<MergedTimetableEntry> merged = [];
+  
+  for (final dayEntries in dayCoursesMap.values) {
+    for (final courseEntries in dayEntries.values) {
+      // 按开始小节排序
+      courseEntries.sort((a, b) => extractStartSection(a).compareTo(extractStartSection(b)));
+      
+      int i = 0;
+      while (i < courseEntries.length) {
+        final current = courseEntries[i];
+        final List<TimetableEntry> group = [current];
+        int currentEnd = extractEndSection(current);
+        
+        // 查找连续的相同课程
+        for (int j = i + 1; j < courseEntries.length; j++) {
+          final next = courseEntries[j];
+          final nextStart = extractStartSection(next);
+          
+          // 检查是否连续且为相同课程
+          if (nextStart == currentEnd + 1 && 
+              current.courseName == next.courseName &&
+              current.teacher == next.teacher) {
+            group.add(next);
+            currentEnd = extractEndSection(next);
+          } else {
+            break;
+          }
+        }
+        
+        // 创建合并条目
+        final startSection = extractStartSection(group.first);
+        final endSection = extractEndSection(group.last);
+        
+        merged.add(MergedTimetableEntry(
+          courseName: current.courseName,
+          teacher: current.teacher,
+          credits: current.credits,
+          location: current.location,
+          sectionText: '${startSection.toString().padLeft(2, '0')}-${endSection.toString().padLeft(2, '0')}节',
+          weekText: current.weekText,
+          dayOfWeek: current.dayOfWeek,
+          startSection: startSection,
+          endSection: endSection,
+          rowSpan: group.length,
+          originalEntries: group,
+        ));
+        
+        i += group.length;
+      }
+    }
+  }
+  
+  return merged;
+}
+
 // 统一的节次文本格式化：将如“01~02节”“第01-02节”“01-02”等规范为“第01-02节”
 String formatSectionsFromWeekText(String weekText) {
   final m1 = RegExp(r'(第?\s*(\d{1,2})\s*[-~至]\s*(\d{1,2})\s*节)').firstMatch(weekText);

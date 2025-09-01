@@ -26,6 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   String? _error;
   String _selectedNetworkEnvironment = 'intranet'; // 默认选择校园网
   bool _rememberPassword = false;
+  bool _obscurePassword = true; // 密码可见性控制
 
   @override
   void initState() {
@@ -149,13 +150,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: null,
-        title: const Text('登录', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
-        centerTitle: false,
-      ),
       backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: SingleChildScrollView(
@@ -165,72 +159,41 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               // Logo和标题区域
               const SizedBox(height: 60),
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+              Column(
+                children: [
+                  Icon(
+                    Icons.school_rounded,
+                    size: 72,
+                    color: Colors.blue[600],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '科文通',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
                     ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.asset(
-                        'lib/assets/images/logo.png',
-                        width: 72,
-                        height: 72,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '科文通',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               
               const SizedBox(height: 40),
               
               // 登录表单
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '登录',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      '登录',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
                     
                     // 网络环境选择
                     Container(
@@ -250,11 +213,11 @@ class _LoginPageState extends State<LoginPage> {
                         items: const [
                           DropdownMenuItem(
                             value: 'intranet',
-                            child: Text('校园网环境'),
+                            child: Text('校园网'),
                           ),
                           DropdownMenuItem(
                             value: 'internet',
-                            child: Text('外网环境'),
+                            child: Text('外网'),
                           ),
                         ],
                         onChanged: (value) async {
@@ -300,10 +263,21 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: TextField(
                         controller: _passCtrl,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           labelText: '密码',
                           prefixIcon: Icon(Icons.lock, color: Colors.grey[600]),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                              color: Colors.grey[600],
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
@@ -451,7 +425,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-              ),
               
               const SizedBox(height: 40),
               
