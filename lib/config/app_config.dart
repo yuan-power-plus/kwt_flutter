@@ -36,7 +36,7 @@ class AppConfig {
   
   /// 应用基础信息
   static const String appName = '科文通';
-  static const String appVersion = '3.4.1';
+  static const String appVersion = '3.5.1';
   static const String appDescription = '科文通教务系统查询应用';
   
   /// GitHub 配置（用于检查更新）

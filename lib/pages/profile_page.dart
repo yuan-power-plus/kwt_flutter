@@ -189,25 +189,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 24),
           _SectionTitle('关于与账户'),
           const SizedBox(height: 8),
-          // 显示当前网络环境
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            child: ListTile(
-              leading: const Icon(Icons.wifi),
-              title: const Text('网络环境'),
-              subtitle: FutureBuilder<String?>(
-                future: _settings.getNetworkEnvironment(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData && snapshot.data != null) {
-                    final env = snapshot.data!;
-                    return Text(env == 'internet' ? '外网环境' : '校园网环境');
-                  }
-                  return const Text('校园网环境');
-                },
-              ),
-              trailing: const Icon(Icons.info_outline),
-            ),
-          ),
+
           Card(
             margin: const EdgeInsets.symmetric(vertical: 6),
             child: ListTile(
