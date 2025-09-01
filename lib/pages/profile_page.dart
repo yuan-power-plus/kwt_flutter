@@ -1,7 +1,7 @@
 // 个人中心页面：展示登录状态、基本信息、学期与开始日期设置等
 import 'package:flutter/material.dart';
 import 'package:kwt_flutter/services/settings.dart';
-import 'package:kwt_flutter/services/config.dart';
+import 'package:kwt_flutter/config/app_config.dart';
 import 'package:kwt_flutter/services/update_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:kwt_flutter/pages/login_page.dart';
@@ -145,7 +145,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),

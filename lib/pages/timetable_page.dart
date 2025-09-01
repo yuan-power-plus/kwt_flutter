@@ -5,6 +5,9 @@ import 'package:kwt_flutter/services/kwt_client.dart';
 import 'package:kwt_flutter/services/settings.dart';
 import 'package:kwt_flutter/utils/timetable_utils.dart';
 import 'package:kwt_flutter/pages/login_page.dart';
+import 'package:kwt_flutter/common/widget/detail_row.dart';
+import 'package:kwt_flutter/common/widget/course_entry_tile.dart';
+import 'package:kwt_flutter/config/app_config.dart';
 
 /// 个人课表页
 class TimetablePage extends StatefulWidget {
@@ -33,7 +36,7 @@ class _TimetablePageState extends State<TimetablePage> {
 
   /// 从设置加载默认学期与开学日期，并自动计算周次与日期
   Future<void> _initFromSettings() async {
-    _termCtrl.text = await _settings.getTerm() ?? '2024-2025-2';
+    _termCtrl.text = await _settings.getTerm() ?? AppConfig.defaultTerm;
     final savedStart = await _settings.getStartDate() ?? '';
     _timeModeCtrl.text = KwtClient.defaultTimeMode;
 
@@ -442,138 +445,15 @@ class _Cell extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (final e in entries)
-                  GestureDetector(
-                    onTap: () => _showDetail(context, e),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _EntryTile(entry: e),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: CourseEntryTile(
+                      entry: e,
+                      onTap: () => CourseDetailDialog.show(context, e),
                     ),
                   ),
               ],
             ),
-    );
-  }
-
-  void _showDetail(BuildContext context, TimetableEntry e) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.class_, color: Colors.blue[600], size: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                e.courseName,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Builder(builder: (context) {
-              final bool isPe = e.courseName.contains('大学体育') || e.courseName.contains('大学物理实验');
-              final String teacherValue = isPe
-                  ? (e.location.isNotEmpty ? e.location : e.teacher)
-                  : e.teacher;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _DetailRow('教师', teacherValue, Icons.person),
-                  if (!isPe) _DetailRow('地点', e.location, Icons.location_on),
-                  if (!isPe && (e.weekText.isNotEmpty || e.sectionIndex > 0 || e.sectionText.isNotEmpty))
-                    _DetailRow('节次', _formatSections(e), Icons.schedule),
-                  if (!isPe && e.credits.isNotEmpty) _DetailRow('学分', e.credits, Icons.star),
-                ],
-              );
-            }),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow(this.label, this.value, this.icon);
-  
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey[600], size: 18),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 60,
-            child: Text(
-              '$label：',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-String _formatSections(TimetableEntry e) => formatSections(e);
-
-class _EntryTile extends StatelessWidget {
-  const _EntryTile({required this.entry});
-  final TimetableEntry entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          entry.courseName,
-          style: textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          compactLocation(entry.location),
-          style: textTheme.bodySmall?.copyWith(
-            color: Colors.grey[600],
-            fontSize: 11,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 }

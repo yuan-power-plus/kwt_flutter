@@ -1,6 +1,5 @@
 // 后端客户端：封装登录、验证码、课表、成绩、等级考试等接口的请求与解析
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
@@ -8,7 +7,8 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as dom;
 import 'package:kwt_flutter/models/models.dart';
-import 'package:kwt_flutter/services/config.dart';
+import 'package:kwt_flutter/config/app_config.dart';
+import 'package:kwt_flutter/utils/response_helper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -195,18 +195,9 @@ class KwtClient {
       try {
         final res = await _dio.get(
           path,
-          options: Options(
-            responseType: ResponseType.bytes,
-            headers: {
-              'Referer': '$_baseUrl/framework/xsMainV.htmlx',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-              'Accept-Language': 'zh-CN,zh;q=0.9',
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
-            },
-          ),
+          options: ResponseHelper.createHtmlRequestOptions(_baseUrl),
         );
-        final bytes = Uint8List.fromList((res.data as List<int>));
-        final html = utf8.decode(bytes, allowMalformed: true);
+        final html = ResponseHelper.decodeHtmlResponse(res);
         return await parseTermsFromHtml(html);
       } catch (_) {
         return [];
@@ -265,8 +256,7 @@ class KwtClient {
         validateStatus: (code) => true,
       ),
     );
-    final bytes = Uint8List.fromList((response.data as List<int>));
-    final html = utf8.decode(bytes, allowMalformed: true);
+    final html = ResponseHelper.decodeHtmlResponse(response);
     final failed = RegExp(r'(验证码|密码错误|失败|不存在|错误)', caseSensitive: false).hasMatch(html);
     return !failed;
   }
@@ -276,14 +266,9 @@ class KwtClient {
     try {
       final res = await _dio.get(
         '/framework/xsMainV.htmlx',
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {'Referer': '$_baseUrl/'},
-          validateStatus: (s) => true,
-        ),
+        options: ResponseHelper.createHtmlRequestOptions(_baseUrl),
       );
-      final bytes = Uint8List.fromList((res.data as List<int>));
-      final html = utf8.decode(bytes, allowMalformed: true);
+      final html = ResponseHelper.decodeHtmlResponse(res);
       final doc = html_parser.parse(html);
       String name = '';
       // 常见结构：<li class="user"></li><li><span>姓名</span></li>
@@ -347,16 +332,9 @@ class KwtClient {
         'xnxqid': termId,
         'xswk': showWeekend.toString(),
       },
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: {
-          'Referer': '$_baseUrl/',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-      ),
+      options: ResponseHelper.createHtmlRequestOptions(_baseUrl),
     );
-    final bytes = Uint8List.fromList((response.data as List<int>));
-    final html = utf8.decode(bytes, allowMalformed: true);
+    final html = ResponseHelper.decodeHtmlResponse(response);
     return _extractTableRows(html);
   }
 
@@ -375,19 +353,9 @@ class KwtClient {
         'xnxqid': termId,
         'xswk': showWeekend.toString(),
       },
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: {
-          'Referer': '$_baseUrl/',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-      ),
+      options: ResponseHelper.createHtmlRequestOptions(_baseUrl),
     );
-    final bytes = Uint8List.fromList((response.data as List<int>));
-    final html = utf8.decode(bytes, allowMalformed: true);
-    if (_htmlLooksLikeLoginPage(html)) {
-      throw AuthExpiredException('登录已失效，请重新登录');
-    }
+    final html = ResponseHelper.decodeAndValidateHtml(response);
     return parsePersonalTimetableStructured(html);
   }
 
@@ -411,16 +379,9 @@ class KwtClient {
     final response = await _dio.post(
       '/kscj/cjcx_list',
       data: form,
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: {
-          'Referer': '$_baseUrl/',
-          'Content-Type': 'multipart/form-data',
-        },
-      ),
+      options: ResponseHelper.createFormRequestOptions(_baseUrl),
     );
-    final bytes = Uint8List.fromList((response.data as List<int>));
-    final html = utf8.decode(bytes, allowMalformed: true);
+    final html = ResponseHelper.decodeHtmlResponse(response);
     return _extractTableRows(html);
   }
 
@@ -444,19 +405,9 @@ class KwtClient {
     final response = await _dio.post(
       '/kscj/cjcx_list',
       data: form,
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: {
-          'Referer': '$_baseUrl/',
-          'Content-Type': 'multipart/form-data',
-        },
-      ),
+      options: ResponseHelper.createFormRequestOptions(_baseUrl),
     );
-    final bytes = Uint8List.fromList((response.data as List<int>));
-    final html = utf8.decode(bytes, allowMalformed: true);
-    if (_htmlLooksLikeLoginPage(html)) {
-      throw AuthExpiredException('登录已失效，请重新登录');
-    }
+    final html = ResponseHelper.decodeAndValidateHtml(response);
     return _parseGrades(html);
   }
 
@@ -464,19 +415,9 @@ class KwtClient {
   Future<List<ExamLevelEntry>> fetchExamLevel() async {
     final response = await _dio.get(
       '/kscj/djkscj_list',
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: {
-          'Referer': '$_baseUrl/',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-      ),
+      options: ResponseHelper.createHtmlRequestOptions(_baseUrl),
     );
-    final bytes = Uint8List.fromList((response.data as List<int>));
-    final html = utf8.decode(bytes, allowMalformed: true);
-    if (_htmlLooksLikeLoginPage(html)) {
-      throw AuthExpiredException('登录已失效，请重新登录');
-    }
+    final html = ResponseHelper.decodeAndValidateHtml(response);
     return parseExamLevel(html);
   }
 
@@ -681,16 +622,9 @@ class KwtClient {
     final response = await _dio.post(
       '/kbcx/kbxx_xzb_ifr',
       data: form,
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: {
-          'Referer': '$_baseUrl/',
-          'Content-Type': 'multipart/form-data',
-        },
-      ),
+      options: ResponseHelper.createFormRequestOptions(_baseUrl),
     );
-    final bytes = Uint8List.fromList((response.data as List<int>));
-    final html = utf8.decode(bytes, allowMalformed: true);
+    final html = ResponseHelper.decodeHtmlResponse(response);
     return parseClassTimetableStructured(html);
   }
 

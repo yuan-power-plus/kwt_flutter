@@ -4,7 +4,6 @@ import 'package:kwt_flutter/pages/features_page.dart';
 import 'package:kwt_flutter/pages/profile_page.dart';
 import 'package:kwt_flutter/pages/timetable_page.dart';
 import 'package:kwt_flutter/services/kwt_client.dart';
-import 'package:kwt_flutter/services/settings.dart';
 
 /// Tab 容器页
 class TabScaffold extends StatefulWidget {
@@ -17,7 +16,6 @@ class TabScaffold extends StatefulWidget {
 
 class _TabScaffoldState extends State<TabScaffold> {
   int _index = 0;
-  final SettingsService _settings = SettingsService();
 
   /// 处理物理返回键：弹出确认对话框，防止误退出
   Future<bool> _onWillPop() async {

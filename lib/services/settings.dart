@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:kwt_flutter/services/config.dart';
+import 'package:kwt_flutter/config/app_config.dart';
 
 // 本地设置服务：封装 SharedPreferences 的键值读写
 class SettingsService {
@@ -85,10 +85,10 @@ class SettingsService {
   Future<String> getCurrentServerUrl() async {
     final environment = await getNetworkEnvironment();
     if (environment == 'internet') {
-      return AppConfig.internetServerUrl;
+      return NetworkEnvironment.internet.baseUrl;
     }
     // 默认为校园网
-    return AppConfig.intranetServerUrl;
+    return NetworkEnvironment.intranet.baseUrl;
   }
 
   // 记住密码与本地保存的密码

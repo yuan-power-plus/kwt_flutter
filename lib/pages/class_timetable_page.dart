@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:kwt_flutter/models/models.dart';
 import 'package:kwt_flutter/services/kwt_client.dart';
 import 'package:kwt_flutter/utils/timetable_utils.dart';
+import 'package:kwt_flutter/common/widget/detail_row.dart';
+import 'package:kwt_flutter/common/widget/course_entry_tile.dart';
 
 /// 班级课表页
 class ClassTimetablePage extends StatefulWidget {
@@ -412,10 +414,10 @@ class _Cell extends StatelessWidget {
               children: [
                 for (int i = 0; i < entries.length; i++) ...[
                   GestureDetector(
-                    onTap: () => _showDetail(context, entries[i]),
+                    onTap: () => CourseDetailDialog.show(context, entries[i]),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: _EntryTile(entry: entries[i]),
+                      child: CourseEntryTile(entry: entries[i], compact: true),
                     ),
                   ),
                   if (i != entries.length - 1)
@@ -481,135 +483,5 @@ class _DashedLinePainter extends CustomPainter {
         oldDelegate.dashGap != dashGap;
   }
 }
-
-class _EntryTile extends StatelessWidget {
-  const _EntryTile({required this.entry});
-  final TimetableEntry entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          entry.courseName,
-          style: textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        (entry.courseName.trim() == '大学体育A')
-            ? const SizedBox.shrink()
-            : Column(
-                children: [
-                  const SizedBox(height: 4),
-                  Text(
-                    compactLocation(entry.location),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontSize: 11,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-      ],
-    );
-  }
-}
-
-// 位置压缩逻辑改为工具方法 compactLocation
-
-void _showDetail(BuildContext context, TimetableEntry e) {
-  FocusScope.of(context).unfocus();
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: Row(
-        children: [
-          Icon(Icons.class_, color: Colors.blue[600], size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              e.courseName,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Builder(builder: (context) {
-            final bool isPe = e.courseName.contains('大学体育') || e.courseName.contains('大学物理实验');
-            final String teacherValue = isPe
-                ? (e.location.isNotEmpty ? e.location : e.teacher)
-                : e.teacher;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _DetailRow('教师', teacherValue, Icons.person),
-                if (!isPe) _DetailRow('地点', e.location, Icons.location_on),
-                if (!isPe && e.credits.isNotEmpty) _DetailRow('学分', e.credits, Icons.star),
-              ],
-            );
-          }),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
-        ),
-      ],
-    ),
-  );
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow(this.label, this.value, this.icon);
-  
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey[600], size: 18),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 60,
-            child: Text(
-              '$label：',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-String _formatSections(TimetableEntry e) => formatSections(e);
 
 

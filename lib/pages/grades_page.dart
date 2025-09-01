@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:kwt_flutter/models/models.dart';
 import 'package:kwt_flutter/services/kwt_client.dart';
+import 'package:kwt_flutter/common/widget/detail_row.dart';
 
 /// 成绩列表页入口组件
 ///
@@ -627,16 +628,16 @@ class _GradesPageState extends State<GradesPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _DetailRow('课程代码', grade.courseCode, Icons.code),
-            _DetailRow('成绩', grade.score, Icons.score),
-            _DetailRow('学分', grade.credit, Icons.star),
-            _DetailRow('GPA', grade.gpa, Icons.trending_up),
-            _DetailRow('学时', grade.totalHours, Icons.access_time),
-            _DetailRow('课程属性', grade.courseAttr, Icons.category),
-            _DetailRow('课程性质', grade.courseNature, Icons.school),
-            _DetailRow('考试类型', grade.examType, Icons.quiz),
+            DetailRow(label: '课程代码', value: grade.courseCode, icon: Icons.code),
+            DetailRow(label: '成绩', value: grade.score, icon: Icons.score),
+            DetailRow(label: '学分', value: grade.credit, icon: Icons.star),
+            DetailRow(label: 'GPA', value: grade.gpa, icon: Icons.trending_up),
+            DetailRow(label: '学时', value: grade.totalHours, icon: Icons.access_time),
+            DetailRow(label: '课程属性', value: grade.courseAttr, icon: Icons.category),
+            DetailRow(label: '课程性质', value: grade.courseNature, icon: Icons.school),
+            DetailRow(label: '考试类型', value: grade.examType, icon: Icons.quiz),
             if (grade.generalType.isNotEmpty)
-              _DetailRow('通选课类别', grade.generalType, Icons.label),
+              DetailRow(label: '通选课类别', value: grade.generalType, icon: Icons.label),
           ],
         ),
         actions: [
@@ -649,38 +650,7 @@ class _GradesPageState extends State<GradesPage> {
     );
   }
 
-  /// 详情项行：左侧为标签与图标，右侧为值
-  Widget _DetailRow(String label, String value, IconData icon) {
-    if (value.isEmpty) return const SizedBox.shrink();
-    
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey[600], size: 18),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 80,
-            child: Text(
-              '$label：',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   /// 将分数区间映射为不同颜色，便于快速识别成绩水平
   Color _getScoreColor(String score) {

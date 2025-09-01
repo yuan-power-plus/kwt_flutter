@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:kwt_flutter/services/config.dart';
+import 'package:kwt_flutter/config/app_config.dart';
 
 /// 应用更新信息数据结构
 ///

@@ -4,7 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:kwt_flutter/pages/login_page.dart';
 import 'package:kwt_flutter/pages/tab_scaffold.dart';
 import 'package:kwt_flutter/services/kwt_client.dart';
-import 'package:kwt_flutter/services/config.dart';
+import 'package:kwt_flutter/config/app_config.dart';
 import 'package:kwt_flutter/services/settings.dart';
 import 'package:kwt_flutter/theme/app_theme.dart';
 

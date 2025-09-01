@@ -1,4 +1,4 @@
-// 应用通用常量：页面标题、按钮文本、提示与默认值
+// 应用通用常量：页面标题、按钮文本、提示信息
 class AppConstants {
   // 页面标题
   static const String timetableTitle = '课表';
@@ -46,15 +46,7 @@ class AppConstants {
   static const String logoutSuccessText = '已退出登录';
   static const String saveSuccessText = '保存成功';
   
-  // 默认值
-  static const String defaultTerm = '2024-2025-2';
-  static const String defaultTimeMode = '2AA072D3F1D747B98B4F5F84683493E5';
-  
   // 时间格式
   static const String dateFormat = 'yyyy-MM-dd';
   static const String timeFormat = 'HH:mm';
-  
-  // 分页
-  static const int defaultPageSize = 20;
-  static const int maxPageSize = 100;
 }

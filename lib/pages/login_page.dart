@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:kwt_flutter/services/kwt_client.dart';
 import 'package:kwt_flutter/services/settings.dart';
-import 'package:kwt_flutter/services/config.dart';
+import 'package:kwt_flutter/config/app_config.dart';
 
 /// 登录页
 class LoginPage extends StatefulWidget {
@@ -64,8 +64,8 @@ class _LoginPageState extends State<LoginPage> {
   /// 根据选择的网络环境创建客户端并刷新验证码
   Future<void> _initClient() async {
     final serverUrl = _selectedNetworkEnvironment == 'internet' 
-        ? AppConfig.internetServerUrl 
-        : AppConfig.intranetServerUrl;
+        ? NetworkEnvironment.internet.baseUrl
+        : NetworkEnvironment.intranet.baseUrl;
     final c = await KwtClient.createPersisted(baseUrl: serverUrl);
     if (!mounted) return;
     setState(() => _client = c);
